@@ -1,0 +1,26 @@
+name: MLOps Model Evaluation & Drift Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml-ai/**'
+  schedule:
+    - cron: '0 0 * * 0' # Weekly model retraining check
+
+jobs:
+  evaluate-models:
+    name: Model Quality & Drift Evaluation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install MLOps Tools
+        run: |
+          pip install numpy pandas polars scikit-learn
+      - name: Run Data Processing & Drift Checks
+        run: |
+          python ml-ai/pipelines/etl_features.py
+          python ml-ai/monitoring/drift_detector.py

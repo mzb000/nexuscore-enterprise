@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package payment.v1;
+
+option go_package = "github.com/nexuscore/contracts/payment/v1;paymentv1";
+
+service PaymentService {
+  rpc AuthorizePayment (AuthorizePaymentRequest) returns (AuthorizePaymentResponse);
+  rpc RefundPayment (RefundPaymentRequest) returns (RefundPaymentResponse);
+}
+
+message AuthorizePaymentRequest {
+  string order_id = 1;
+  string customer_id = 2;
+  double amount = 3;
+  string currency = 4;
+  string payment_method = 5;
+  string raw_payment_token = 6;
+  string idempotency_key = 7;
+}
+
+message AuthorizePaymentResponse {
+  string payment_id = 1;
+  string status = 2;
+  string transaction_reference = 3;
+}
+
+message RefundPaymentRequest {
+  string payment_id = 1;
+  string reason = 2;
+}
+
+message RefundPaymentResponse {
+  string payment_id = 1;
+  string status = 2;
+  bool is_refunded = 3;
+}

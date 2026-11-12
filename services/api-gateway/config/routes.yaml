@@ -1,0 +1,69 @@
+_format_version: "3.0"
+
+services:
+  # Identity Service Route
+  - name: identity-service
+    url: http://identity-service:4001
+    routes:
+      - name: auth-route
+        paths:
+          - /api/v1/auth
+        strip_path: false
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: redis
+          redis_host: redis
+          redis_port: 6379
+
+  # Order Service Route (REST / gRPC proxy)
+  - name: order-service
+    url: http://order-service:50051
+    routes:
+      - name: order-route
+        paths:
+          - /api/v1/orders
+        strip_path: false
+
+  # Catalog Service Route
+  - name: catalog-service
+    url: http://catalog-service:8000
+    routes:
+      - name: catalog-route
+        paths:
+          - /api/v1/products
+          - /graphql
+        strip_path: false
+
+  # Payment Service Route
+  - name: payment-service
+    url: http://payment-service:8082
+    routes:
+      - name: payment-route
+        paths:
+          - /api/v1/payments
+        strip_path: false
+
+plugins:
+  # Global Security Headers (OWASP)
+  - name: response-transformer
+    config:
+      add:
+        headers:
+          - "X-Frame-Options: DENY"
+          - "X-Content-Type-Options: nosniff"
+          - "Content-Security-Policy: default-src 'self'"
+          - "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload"
+  # Global CORS
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:3000"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      credentials: true

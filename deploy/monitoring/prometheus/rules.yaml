@@ -1,0 +1,31 @@
+groups:
+  - name: nexuscore_alerts
+    rules:
+      # Alert on High HTTP 5xx Rate across services
+      - alert: HighHttp5xxRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[2m])) / sum(rate(http_requests_total[2m])) * 100 > 5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx Error Rate (> 5%) on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} has experienced an elevated 5xx error rate for more than 1 minute."
+
+      # Alert on High P99 API Latency
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P99 API Latency Spike (> 800ms) on {{ $labels.service }}"
+          description: "P99 latency has exceeded 800ms for over 2 minutes."
+
+      # Alert on Kafka Consumer Group Lag
+      - alert: KafkaConsumerLagHigh
+        expr: sum(kafka_consumergroup_lag{topic=~"nexus.*"}) by (consumergroup, topic) > 500
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka Consumer Lag High (> 500) for group {{ $labels.consumergroup }}"
