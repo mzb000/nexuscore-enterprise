@@ -1,0 +1,45 @@
+# Node / NestJS
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Prisma
+/prisma/*.db
+/prisma/*.db-journal
+
+# Python / AI
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.pytest_cache/
+.coverage
+
+# Go
+bin/
+pkg/
+
+# Java / Spring Boot
+target/
+*.class
+.mvn/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

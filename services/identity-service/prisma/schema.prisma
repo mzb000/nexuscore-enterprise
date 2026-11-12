@@ -1,0 +1,76 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  VENDOR
+  CUSTOMER
+  SERVICE_ACCOUNT
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  LOCKED
+}
+
+model User {
+  id              String         @id @default(uuid()) @db.Uuid
+  email           String         @unique @db.VarChar(255)
+  passwordHash    String         @db.VarChar(255)
+  firstName       String         @db.VarChar(100)
+  lastName        String         @db.VarChar(100)
+  role            Role           @default(CUSTOMER)
+  status          AccountStatus  @default(ACTIVE)
+  isEmailVerified Boolean        @default(false)
+  failedAttempts  Int            @default(0)
+  lockedUntil     DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  refreshTokens   RefreshToken[]
+  auditLogs       AuditLog[]
+
+  @@index([email])
+  @@index([role, status])
+  @@map("users")
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  tokenFamily String    @db.Uuid
+  hashedToken String    @unique @db.VarChar(255)
+  isRevoked   Boolean   @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  userId      String    @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenFamily])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   @db.VarChar(100)
+  ipAddress String   @db.VarChar(45)
+  userAgent String   @db.Text
+  details   Json?
+  timestamp DateTime @default(now())
+
+  @@index([userId, action])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
