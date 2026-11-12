@@ -1,0 +1,43 @@
+---
+- name: Hardened Production Host Provisioning & Kernel Tuning
+  hosts: all
+  become: yes
+  vars:
+    nexus_user: "nexusrunner"
+    ssh_port: 22
+
+  tasks:
+    - name: Ensure security packages are installed
+      apt:
+        name:
+          - ufw
+          - fail2ban
+          - auditd
+          - unattended-upgrades
+        state: present
+        update_cache: yes
+
+    - name: Apply High-Throughput Linux Kernel Sysctl Tuning
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: "net.ipv4.tcp_syncookies", value: "1" }
+        - { name: "net.ipv4.tcp_max_syn_backlog", value: "4096" }
+        - { name: "net.core.somaxconn", value: "65535" }
+        - { name: "net.ipv4.ip_local_port_range", value: "1024 65535" }
+        - { name: "fs.file-max", value: "2097152" }
+        - { name: "vm.max_map_count", value: "262144" } # Required for Elasticsearch
+
+    - name: Configure UFW Firewall Policies
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - "{{ ssh_port }}"
+        - 80
+        - 443
+        - 6443 # K8s API server
