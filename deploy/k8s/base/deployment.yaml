@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexuscore-identity-service
+  namespace: nexuscore
+  labels:
+    app: identity-service
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: identity-service
+  template:
+    metadata:
+      labels:
+        app: identity-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+        - name: identity-service
+          image: nexuscore/identity-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4001
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1024Mi"
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: 4001
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: 4001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          envFrom:
+            - configMapRef:
+                name: nexuscore-env-config
+            - secretRef:
+                name: nexuscore-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+  namespace: nexuscore
+spec:
+  type: ClusterIP
+  selector:
+    app: identity-service
+  ports:
+    - port: 4001
+      targetPort: 4001

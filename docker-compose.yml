@@ -1,0 +1,5 @@
+# Root Docker Compose orchestrating all backing infrastructure for NexusCore Enterprise
+# Run: docker compose up -d
+
+include:
+  - path: ./deploy/docker-compose.yml
